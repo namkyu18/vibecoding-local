@@ -19,7 +19,7 @@ export default function Home() {
       description: "React와 Next.js를 사용하여 만든 반응형 온라인 쇼핑몰",
       tech: ["React", "Next.js", "TypeScript", "Tailwind CSS"],
       status: "완료",
-      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: "/placeholder-ecommerce.svg",
       githubUrl: "https://github.com/vibecoding/ecommerce-website",
       demoUrl: "https://vibecoding-ecommerce.vercel.app",
       detailedDescription: "사용자 친화적인 인터페이스와 안전한 결제 시스템을 갖춘 현대적인 온라인 쇼핑몰입니다. 관리자 대시보드와 재고 관리 기능을 포함합니다.",
@@ -49,7 +49,7 @@ export default function Home() {
       description: "개발자 포트폴리오를 위한 모던한 웹사이트",
       tech: ["Next.js", "TypeScript", "Tailwind CSS"],
       status: "진행중",
-      image: "https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: "/placeholder-portfolio.svg",
       githubUrl: "https://github.com/vibecoding/portfolio",
       demoUrl: "https://vibecoding.vercel.app",
       detailedDescription: "개발자의 기술 스택과 프로젝트를 효과적으로 보여주는 개인 포트폴리오 웹사이트입니다. 다크모드 지원과 반응형 디자인을 적용했습니다.",
@@ -79,7 +79,7 @@ export default function Home() {
       description: "Socket.io를 활용한 실시간 채팅 애플리케이션",
       tech: ["React", "Node.js", "Socket.io", "MongoDB"],
       status: "완료",
-      image: "https://images.unsplash.com/photo-1577563908411-5077b6dc7624?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      image: "/placeholder-chat.svg",
       githubUrl: "https://github.com/vibecoding/realtime-chat",
       demoUrl: "https://vibecoding-chat.herokuapp.com",
       detailedDescription: "실시간 메시징과 그룹 채팅 기능을 제공하는 웹 애플리케이션입니다. 사용자 친화적인 UI와 안정적인 실시간 통신을 구현했습니다.",
@@ -139,13 +139,7 @@ export default function Home() {
       <section className="relative pt-32 pb-20 px-6 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-            alt="Coding background"
-            fill
-            className="object-cover opacity-20"
-            priority
-          />
+          <div className="w-full h-full bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-background/90 via-background/80 to-background/90"></div>
         </div>
         
@@ -155,13 +149,9 @@ export default function Home() {
             <div className="mb-8">
               <div className="relative inline-block">
                 <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-primary/20 shadow-2xl">
-                  <Image
-                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
-                    alt="Developer profile"
-                    width={128}
-                    height={128}
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold">
+                    VC
+                  </div>
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-background flex items-center justify-center">
                   <span className="text-white text-xs">💻</span>
@@ -217,7 +207,7 @@ export default function Home() {
                   <div className="relative inline-block mb-4">
                     <Avatar className="w-32 h-32 mx-auto border-4 border-primary/20 shadow-lg">
                       <AvatarImage 
-                        src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
+                        src="/profile-avatar.svg"
                         alt="Developer profile"
                       />
                       <AvatarFallback className="text-4xl bg-muted">
@@ -249,63 +239,56 @@ export default function Home() {
             {[
               { 
                 name: "React", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg", 
+                icon: "⚛️", 
                 level: "고급",
                 color: "bg-blue-50 dark:bg-blue-950"
               },
               { 
                 name: "Next.js", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg", 
+                icon: "▲", 
                 level: "고급",
                 color: "bg-gray-50 dark:bg-gray-950"
               },
               { 
                 name: "TypeScript", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg", 
+                icon: "🔷", 
                 level: "중급",
                 color: "bg-blue-50 dark:bg-blue-950"
               },
               { 
                 name: "Tailwind CSS", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg", 
+                icon: "🎨", 
                 level: "고급",
                 color: "bg-cyan-50 dark:bg-cyan-950"
               },
               { 
                 name: "JavaScript", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg", 
+                icon: "🟨", 
                 level: "고급",
                 color: "bg-yellow-50 dark:bg-yellow-950"
               },
               { 
                 name: "Node.js", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg", 
+                icon: "🟢", 
                 level: "중급",
                 color: "bg-green-50 dark:bg-green-950"
               },
               { 
                 name: "Git", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg", 
+                icon: "📝", 
                 level: "중급",
                 color: "bg-orange-50 dark:bg-orange-950"
               },
               { 
                 name: "Figma", 
-                icon: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/figma/figma-original.svg", 
+                icon: "🎭", 
                 level: "초급",
                 color: "bg-purple-50 dark:bg-purple-950"
               }
             ].map((skill) => (
               <Card key={skill.name} className={`text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${skill.color}`}>
                 <CardContent className="p-6">
-                  <div className="relative w-16 h-16 mx-auto mb-4">
-                    <Image
-                      src={skill.icon}
-                      alt={skill.name}
-                      fill
-                      className="object-contain"
-                    />
-                  </div>
+                  <div className="text-4xl mb-3">{skill.icon}</div>
                   <CardTitle className="text-lg mb-2">{skill.name}</CardTitle>
                   <Badge variant="secondary" className="text-xs">
                     {skill.level}
@@ -369,12 +352,7 @@ export default function Home() {
       <section id="contact" className="relative py-20 px-6 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-          <Image
-            src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-            alt="Contact background"
-            fill
-            className="object-cover opacity-10"
-          />
+          <div className="w-full h-full bg-gradient-to-br from-gray-600/10 via-blue-600/10 to-purple-600/10"></div>
           <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/90 to-background/95"></div>
         </div>
         

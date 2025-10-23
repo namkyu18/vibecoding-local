@@ -1,0 +1,22 @@
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="profileGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#profileGrad)"/>
+  <g transform="translate(200, 200)">
+    <!-- Person icon -->
+    <g fill="white" opacity="0.9">
+      <!-- Head -->
+      <circle cx="0" cy="-30" r="25" stroke="white" stroke-width="3" fill="none"/>
+      <!-- Body -->
+      <path d="M-40,20 Q-40,10 -30,10 L30,10 Q40,10 40,20 L40,80 Q40,90 30,90 L-30,90 Q-40,90 -40,80 Z" stroke="white" stroke-width="3" fill="none"/>
+      <!-- Arms -->
+      <path d="M-40,30 L-60,50 M40,30 L60,50" stroke="white" stroke-width="3"/>
+    </g>
+    <!-- Text -->
+    <text x="0" y="130" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="48" font-weight="bold">VC</text>
+  </g>
+</svg>
