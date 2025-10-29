@@ -606,7 +606,7 @@ export default function Home() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {project.tech.map((tech) => (
+                    {project.tech.map((tech: string) => (
                       <Badge key={tech} variant="outline" className="text-xs">
                         {tech}
                       </Badge>

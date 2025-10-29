@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
+    // Supabase 환경 변수 확인
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        success: false,
+        error: "Supabase 환경 변수가 설정되지 않았습니다.",
+        message: ".env.local 파일에 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요."
+      }, {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
     // 쿼리 파라미터로 필터링 옵션 제공
     const { searchParams } = new URL(request.url);
     const includeSkills = searchParams.get('includeSkills') === 'true';
