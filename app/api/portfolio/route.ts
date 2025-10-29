@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { projectsData } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,48 +7,57 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status');
     const tech = searchParams.get('tech');
     const limit = searchParams.get('limit');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortBy = searchParams.get('sortBy') || 'created_at';
     const order = searchParams.get('order') || 'desc';
 
-    let filteredProjects = [...projectsData];
+    // Supabase에서 프로젝트 데이터 조회
+    let query = supabase
+      .from('projects')
+      .select('*');
 
     // 상태별 필터링
     if (status) {
-      filteredProjects = filteredProjects.filter(project => project.status === status);
+      query = query.eq('status', status);
     }
 
-    // 기술 스택별 필터링
+    // 기술 스택별 필터링 (PostgreSQL 배열 검색)
     if (tech) {
       const techArray = tech.split(',').map(t => t.trim());
-      filteredProjects = filteredProjects.filter(project =>
-        techArray.some(t => project.tech.includes(t))
-      );
+      query = query.overlaps('tech', techArray);
     }
 
     // 정렬
-    filteredProjects.sort((a, b) => {
-      const aValue = a[sortBy as keyof typeof a];
-      const bValue = b[sortBy as keyof typeof b];
-      
-      if (order === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
+    query = query.order(sortBy, { ascending: order === 'asc' });
 
     // 개수 제한
     if (limit) {
       const limitNum = parseInt(limit);
       if (!isNaN(limitNum) && limitNum > 0) {
-        filteredProjects = filteredProjects.slice(0, limitNum);
+        query = query.limit(limitNum);
       }
+    }
+
+    const { data: projects, error } = await query;
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({
+        success: false,
+        error: "데이터베이스에서 프로젝트를 조회하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
+      }, {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
     }
 
     return NextResponse.json({
       success: true,
-      data: filteredProjects,
-      total: filteredProjects.length,
+      data: projects || [],
+      total: projects?.length || 0,
       message: "포트폴리오를 성공적으로 조회했습니다.",
       filters: {
         status,

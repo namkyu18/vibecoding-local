@@ -13,6 +13,18 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // 프로젝트 데이터
+  const [projects, setProjects] = useState<any[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
+  
+  // 기술 스택 데이터
+  const [skills, setSkills] = useState<any[]>([]);
+  const [isLoadingSkills, setIsLoadingSkills] = useState(true);
+  
+  // 개발자 정보
+  const [developerInfo, setDeveloperInfo] = useState<any>(null);
+  const [isLoadingDeveloper, setIsLoadingDeveloper] = useState(true);
+  
   // API 테스트 관련 state
   const [activeTab, setActiveTab] = useState<'guestbook' | 'likes' | 'recommendation'>('guestbook');
   const [guestbookEntries, setGuestbookEntries] = useState<any[]>([]);
@@ -29,7 +41,8 @@ export default function Home() {
   const [recommendationsByCategory, setRecommendationsByCategory] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  const projects = [
+  // 기존 하드코딩된 프로젝트 데이터 (로딩 중일 때 사용)
+  const placeholderProjects = [
     {
       title: "E-커머스 웹사이트",
       description: "React와 Next.js를 사용하여 만든 반응형 온라인 쇼핑몰",
@@ -121,6 +134,76 @@ export default function Home() {
       ]
     }
   ];
+
+  // 프로젝트 데이터 가져오기
+  const fetchProjects = async () => {
+    try {
+      setIsLoadingProjects(true);
+      const response = await fetch('/api/portfolio');
+      const data = await response.json();
+      if (data.success) {
+        // DB 스키마 필드명을 컴포넌트에서 사용하는 필드명으로 변환
+        const transformedProjects = data.data.map((project: any) => ({
+          id: project.id,
+          title: project.title,
+          description: project.description,
+          detailedDescription: project.detailed_description,
+          tech: project.tech,
+          status: project.status,
+          image: project.image,
+          githubUrl: project.github_url,
+          demoUrl: project.demo_url,
+          features: project.features,
+          duration: project.duration,
+          teamSize: project.team_size,
+          challenges: project.challenges,
+          solutions: project.solutions,
+          createdAt: project.created_at,
+          updatedAt: project.updated_at
+        }));
+        setProjects(transformedProjects);
+      }
+    } catch (error) {
+      console.error('프로젝트 조회 실패:', error);
+      // 에러 발생 시 빈 배열 또는 기본값 사용
+      setProjects([]);
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  // 기술 스택 데이터 가져오기
+  const fetchSkills = async () => {
+    try {
+      setIsLoadingSkills(true);
+      const response = await fetch('/api/skills');
+      const data = await response.json();
+      if (data.success && data.data.skills) {
+        setSkills(data.data.skills);
+      }
+    } catch (error) {
+      console.error('기술 스택 조회 실패:', error);
+      setSkills([]);
+    } finally {
+      setIsLoadingSkills(false);
+    }
+  };
+
+  // 개발자 정보 가져오기
+  const fetchDeveloper = async () => {
+    try {
+      setIsLoadingDeveloper(true);
+      const response = await fetch('/api/developer?includeSkills=false');
+      const data = await response.json();
+      if (data.success) {
+        setDeveloperInfo(data.data);
+      }
+    } catch (error) {
+      console.error('개발자 정보 조회 실패:', error);
+    } finally {
+      setIsLoadingDeveloper(false);
+    }
+  };
 
   const handleProjectClick = (project: any) => {
     setSelectedProject(project);
@@ -252,8 +335,11 @@ export default function Home() {
   };
 
   const getLikeCount = (itemId: string): number => {
-    const likeEntry = likesData.find(like => like.itemId === itemId);
-    return likeEntry ? likeEntry.count : 0;
+    // API 응답은 item_id 필드를 사용하므로 변환 필요
+    const likeEntry = likesData.find((like: any) => 
+      like.item_id === itemId || like.itemId === itemId
+    );
+    return likeEntry ? (likeEntry.count || 0) : 0;
   };
 
   const isLiked = (itemId: string): boolean => {
@@ -306,6 +392,9 @@ export default function Home() {
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
+    fetchProjects();
+    fetchSkills();
+    fetchDeveloper();
     fetchGuestbookEntries();
     fetchLikesData();
   }, []);
@@ -364,12 +453,12 @@ export default function Home() {
             <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6">
               안녕하세요,{" "}
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                바이브 코딩
+                {developerInfo?.name || '바이브 코딩'}
               </span>
               입니다
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              창의적이고 사용자 중심의 웹 애플리케이션을 만드는 프론트엔드 개발자입니다
+              {developerInfo?.description || '창의적이고 사용자 중심의 웹 애플리케이션을 만드는 프론트엔드 개발자입니다'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg px-8 py-6">
@@ -388,18 +477,17 @@ export default function Home() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center text-foreground mb-16">소개</h2>
           <div className="grid md:grid-cols-2 gap-12 items-center">
-            <Card>
+                <Card>
               <CardHeader>
                 <CardTitle className="text-2xl">개발자로서의 철학</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  사용자 경험을 최우선으로 생각하며, 깔끔하고 효율적인 코드를 작성하는 것을 목표로 합니다. 
-                  새로운 기술을 배우는 것에 열정적이며, 항상 더 나은 솔루션을 찾기 위해 노력합니다.
+                  {developerInfo?.philosophy || '사용자 경험을 최우선으로 생각하며, 깔끔하고 효율적인 코드를 작성하는 것을 목표로 합니다. 새로운 기술을 배우는 것에 열정적이며, 항상 더 나은 솔루션을 찾기 위해 노력합니다.'}
                 </p>
                 <Separator />
                 <p className="text-muted-foreground">
-                  팀워크를 중시하며, 함께 성장하는 개발 문화를 만들어가고 있습니다.
+                  {developerInfo?.experience || '팀워크를 중시하며, 함께 성장하는 개발 문화를 만들어가고 있습니다.'}
                 </p>
               </CardContent>
             </Card>
@@ -420,11 +508,11 @@ export default function Home() {
                       <span className="text-white text-xs">✓</span>
                     </div>
                   </div>
-                  <CardTitle className="text-xl mb-2">바이브 코딩</CardTitle>
-                  <CardDescription className="text-base mb-4">프론트엔드 개발자</CardDescription>
+                  <CardTitle className="text-xl mb-2">{developerInfo?.name || '바이브 코딩'}</CardTitle>
+                  <CardDescription className="text-base mb-4">{developerInfo?.title || '프론트엔드 개발자'}</CardDescription>
                   <div className="flex justify-center space-x-4 text-sm text-muted-foreground">
-                    <span>📍 서울, 한국</span>
-                    <span>🎓 컴퓨터공학</span>
+                    <span>📍 {developerInfo?.location || '서울, 한국'}</span>
+                    <span>🎓 {developerInfo?.education || '컴퓨터공학'}</span>
                   </div>
                 </div>
               </CardContent>
@@ -437,68 +525,42 @@ export default function Home() {
       <section id="skills" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center text-foreground mb-16">기술 스택</h2>
+          {isLoadingSkills ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">기술 스택을 불러오는 중...</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {[
-              { 
-                name: "React", 
-                icon: "⚛️", 
-                level: "고급",
-                color: "bg-blue-50 dark:bg-blue-950"
-              },
-              { 
-                name: "Next.js", 
-                icon: "▲", 
-                level: "고급",
-                color: "bg-gray-50 dark:bg-gray-950"
-              },
-              { 
-                name: "TypeScript", 
-                icon: "🔷", 
-                level: "중급",
-                color: "bg-blue-50 dark:bg-blue-950"
-              },
-              { 
-                name: "Tailwind CSS", 
-                icon: "🎨", 
-                level: "고급",
-                color: "bg-cyan-50 dark:bg-cyan-950"
-              },
-              { 
-                name: "JavaScript", 
-                icon: "🟨", 
-                level: "고급",
-                color: "bg-yellow-50 dark:bg-yellow-950"
-              },
-              { 
-                name: "Node.js", 
-                icon: "🟢", 
-                level: "중급",
-                color: "bg-green-50 dark:bg-green-950"
-              },
-              { 
-                name: "Git", 
-                icon: "📝", 
-                level: "중급",
-                color: "bg-orange-50 dark:bg-orange-950"
-              },
-              { 
-                name: "Figma", 
-                icon: "🎭", 
-                level: "초급",
-                color: "bg-purple-50 dark:bg-purple-950"
-              }
-            ].map((skill) => (
-              <Card key={skill.name} className={`text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${skill.color}`}>
-                <CardContent className="p-6">
-                  <div className="text-4xl mb-3">{skill.icon}</div>
-                  <CardTitle className="text-lg mb-2">{skill.name}</CardTitle>
-                  <Badge variant="secondary" className="text-xs">
-                    {skill.level}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
+            {skills.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">기술 스택 데이터가 없습니다.</p>
+              </div>
+            ) : (
+              skills.map((skill) => {
+                // 카테고리별 색상 매핑
+                const categoryColors: Record<string, string> = {
+                  frontend: 'bg-blue-50 dark:bg-blue-950',
+                  backend: 'bg-green-50 dark:bg-green-950',
+                  tools: 'bg-orange-50 dark:bg-orange-950',
+                  design: 'bg-purple-50 dark:bg-purple-950'
+                };
+                const color = categoryColors[skill.category] || 'bg-gray-50 dark:bg-gray-950';
+                
+                return (
+                  <Card key={skill.id || skill.name} className={`text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1 ${color}`}>
+                    <CardContent className="p-6">
+                      <div className="text-4xl mb-3">{skill.icon}</div>
+                      <CardTitle className="text-lg mb-2">{skill.name}</CardTitle>
+                      <Badge variant="secondary" className="text-xs">
+                        {skill.level}
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
           </div>
+          )}
         </div>
       </section>
 
@@ -506,10 +568,20 @@ export default function Home() {
       <section id="projects" className="py-20 px-6 bg-muted/50">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-4xl font-bold text-center text-foreground mb-16">프로젝트</h2>
+          {isLoadingProjects ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">프로젝트를 불러오는 중...</p>
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {projects.map((project, index) => (
+            {projects.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">프로젝트 데이터가 없습니다.</p>
+              </div>
+            ) : (
+              projects.map((project) => (
               <Card 
-                key={index} 
+                key={project.id || project.title} 
                 className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden cursor-pointer"
                 onClick={() => handleProjectClick(project)}
               >
@@ -545,8 +617,9 @@ export default function Home() {
                   </Button>
                 </CardContent>
               </Card>
-            ))}
+            )))}
           </div>
+          )}
         </div>
       </section>
 
@@ -565,19 +638,19 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button asChild size="lg" className="text-lg px-8 py-6">
-              <a href="mailto:contact@vibecoding.com" className="flex items-center gap-3">
+              <a href={developerInfo?.email ? `mailto:${developerInfo.email}` : 'mailto:contact@vibecoding.com'} className="flex items-center gap-3">
                 <span>📧</span>
                 이메일 보내기
               </a>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <a href="https://github.com/vibecoding" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+              <a href={developerInfo?.github || 'https://github.com/vibecoding'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                 <span>🐙</span>
                 GitHub
               </a>
             </Button>
             <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-              <a href="https://linkedin.com/in/vibecoding" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
+              <a href={developerInfo?.linkedin || 'https://linkedin.com/in/vibecoding'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3">
                 <span>💼</span>
                 LinkedIn
               </a>
@@ -721,7 +794,15 @@ export default function Home() {
                         { id: 'react-expertise', name: 'React 전문성', icon: '⚛️', description: '컴포넌트 기반 개발' },
                         { id: 'nextjs-mastery', name: 'Next.js 마스터리', icon: '▲', description: '풀스택 프레임워크' },
                         { id: 'typescript-skills', name: 'TypeScript 스킬', icon: '🔷', description: '타입 안전성' }
-                      ].map((skill) => (
+                      ].map((skill) => {
+                        // API 응답의 item_id와 하드코딩된 id를 매칭
+                        const likeEntry = likesData.find((like: any) => 
+                          (like.item_id || like.itemId) === skill.id && 
+                          (like.item_type || like.itemType) === 'skill'
+                        );
+                        const isItemLiked = likedItems.has(skill.id) || (likeEntry && likeEntry.count > 0);
+                        
+                        return (
                         <div key={skill.id} className="group flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
                           <div className="flex items-center gap-3">
                             <span className="text-2xl group-hover:scale-110 transition-transform duration-200">{skill.icon}</span>
@@ -736,20 +817,21 @@ export default function Home() {
                             </span>
                             <Button
                               size="sm"
-                              variant={isLiked(skill.id) ? "default" : "outline"}
+                              variant={isItemLiked ? "default" : "outline"}
                               onClick={() => handleLikeClick(skill.id, 'skill')}
                               disabled={isLiking === skill.id}
                               className={`transition-all duration-200 hover:scale-110 ${
-                                isLiked(skill.id) 
+                                isItemLiked 
                                   ? 'bg-red-500 hover:bg-red-600 text-white' 
                                   : 'text-red-500 hover:text-red-600 hover:bg-red-50'
                               }`}
                             >
-                              {isLiking === skill.id ? '...' : (isLiked(skill.id) ? '❤️' : '🤍')}
+                              {isLiking === skill.id ? '...' : (isItemLiked ? '❤️' : '🤍')}
                             </Button>
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -767,7 +849,15 @@ export default function Home() {
                         { id: 'portfolio-website', name: '포트폴리오 웹사이트', icon: '💼', description: '개인 브랜딩 사이트' },
                         { id: 'chat-application', name: '실시간 채팅 앱', icon: '💬', description: 'Socket.io 기반' },
                         { id: 'api-development', name: 'API 테스트 시스템', icon: '🔧', description: 'RESTful API 개발' }
-                      ].map((project) => (
+                      ].map((project) => {
+                        // API 응답의 item_id와 하드코딩된 id를 매칭
+                        const likeEntry = likesData.find((like: any) => 
+                          (like.item_id || like.itemId) === project.id && 
+                          (like.item_type || like.itemType) === 'project'
+                        );
+                        const isItemLiked = likedItems.has(project.id) || (likeEntry && likeEntry.count > 0);
+                        
+                        return (
                         <div key={project.id} className="group flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-all duration-200 hover:shadow-md hover:scale-[1.02]">
                           <div className="flex items-center gap-3">
                             <span className="text-2xl group-hover:scale-110 transition-transform duration-200">{project.icon}</span>
@@ -782,20 +872,21 @@ export default function Home() {
                             </span>
                             <Button
                               size="sm"
-                              variant={isLiked(project.id) ? "default" : "outline"}
+                              variant={isItemLiked ? "default" : "outline"}
                               onClick={() => handleLikeClick(project.id, 'project')}
                               disabled={isLiking === project.id}
                               className={`transition-all duration-200 hover:scale-110 ${
-                                isLiked(project.id) 
+                                isItemLiked 
                                   ? 'bg-red-500 hover:bg-red-600 text-white' 
                                   : 'text-red-500 hover:text-red-600 hover:bg-red-50'
                               }`}
                             >
-                              {isLiking === project.id ? '...' : (isLiked(project.id) ? '❤️' : '🤍')}
+                              {isLiking === project.id ? '...' : (isItemLiked ? '❤️' : '🤍')}
                             </Button>
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -810,19 +901,19 @@ export default function Home() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="text-center p-4 bg-muted rounded-lg">
                         <div className="text-2xl font-bold text-primary">
-                          {likesData.reduce((sum, like) => sum + like.count, 0)}
+                          {likesData.reduce((sum, like: any) => sum + (like.count || 0), 0)}
                         </div>
                         <div className="text-sm text-muted-foreground">총 좋아요</div>
                       </div>
                       <div className="text-center p-4 bg-muted rounded-lg">
                         <div className="text-2xl font-bold text-primary">
-                          {likesData.filter(like => like.itemType === 'skill').length}
+                          {likesData.filter((like: any) => (like.item_type || like.itemType) === 'skill').length}
                         </div>
                         <div className="text-sm text-muted-foreground">기술 스택</div>
                       </div>
                       <div className="text-center p-4 bg-muted rounded-lg">
                         <div className="text-2xl font-bold text-primary">
-                          {likesData.filter(like => like.itemType === 'project').length}
+                          {likesData.filter((like: any) => (like.item_type || like.itemType) === 'project').length}
                         </div>
                         <div className="text-sm text-muted-foreground">프로젝트</div>
                       </div>
@@ -856,8 +947,7 @@ export default function Home() {
                               "{currentRecommendation.content}"
                             </p>
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <span>— {currentRecommendation.author}</span>
-                              <span>•</span>
+                              {currentRecommendation.author && <><span>— {currentRecommendation.author}</span><span>•</span></>}
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 getCategoryInfo(currentRecommendation.category).color
                               }`}>
@@ -934,8 +1024,7 @@ export default function Home() {
                                 <div className="flex-1">
                                   <p className="text-foreground mb-2">{rec.content}</p>
                                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span>— {rec.author}</span>
-                                    <span>•</span>
+                                    {rec.author && <><span>— {rec.author}</span><span>•</span></>}
                                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                       getCategoryInfo(rec.category).color
                                     }`}>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { projectsData } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(
   request: NextRequest,
@@ -8,9 +8,13 @@ export async function GET(
   try {
     const projectId = params.id;
     
-    const project = projectsData.find(p => p.id === projectId);
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .single();
     
-    if (!project) {
+    if (error || !project) {
       return NextResponse.json({
         success: false,
         error: "프로젝트를 찾을 수 없습니다.",

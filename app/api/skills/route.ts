@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { developerData } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -7,20 +7,40 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const level = searchParams.get('level');
 
-    let skills = [...developerData.skills];
+    // Supabase에서 스킬 데이터 조회
+    let query = supabase
+      .from('skills')
+      .select('*');
 
     // 카테고리별 필터링
     if (category) {
-      skills = skills.filter(skill => skill.category === category);
+      query = query.eq('category', category);
     }
 
     // 레벨별 필터링
     if (level) {
-      skills = skills.filter(skill => skill.level === level);
+      query = query.eq('level', level);
+    }
+
+    const { data: skills, error } = await query;
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({
+        success: false,
+        error: "데이터베이스에서 기술 스택을 조회하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
+      }, {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
     }
 
     // 카테고리별 그룹화
-    const groupedSkills = skills.reduce((acc, skill) => {
+    const groupedSkills = (skills || []).reduce((acc, skill) => {
       if (!acc[skill.category]) {
         acc[skill.category] = [];
       }
@@ -31,9 +51,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        skills,
+        skills: skills || [],
         groupedSkills,
-        total: skills.length
+        total: skills?.length || 0
       },
       message: "기술 스택을 성공적으로 조회했습니다.",
       filters: {

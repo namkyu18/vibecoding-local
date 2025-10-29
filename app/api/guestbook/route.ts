@@ -1,14 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getGuestbookEntries, addGuestbookEntry, deleteGuestbookEntry } from '@/lib/guestbook-data';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
-    const entries = getGuestbookEntries();
+    const { data: entries, error } = await supabase
+      .from('guestbook')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({
+        success: false,
+        error: "데이터베이스에서 방명록을 조회하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
+      }, {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
     
     return NextResponse.json({
       success: true,
-      data: entries,
-      total: entries.length,
+      data: entries || [],
+      total: entries?.length || 0,
       message: "방명록을 성공적으로 조회했습니다."
     }, {
       status: 200,
@@ -97,7 +115,29 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const newEntry = addGuestbookEntry(name, message);
+    const { data: newEntry, error } = await supabase
+      .from('guestbook')
+      .insert({
+        name: name.trim(),
+        message: message.trim()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return NextResponse.json({
+        success: false,
+        error: "데이터베이스에 방명록을 저장하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
+      }, {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -147,15 +187,19 @@ export async function DELETE(request: NextRequest) {
       });
     }
 
-    const success = deleteGuestbookEntry(id);
+    const { error } = await supabase
+      .from('guestbook')
+      .delete()
+      .eq('id', id);
 
-    if (!success) {
+    if (error) {
+      console.error('Supabase error:', error);
       return NextResponse.json({
         success: false,
-        error: "해당 방명록을 찾을 수 없습니다.",
-        message: "존재하지 않는 방명록입니다."
+        error: "데이터베이스에서 방명록을 삭제하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
       }, {
-        status: 404,
+        status: 500,
         headers: {
           'Content-Type': 'application/json',
           'Access-Control-Allow-Origin': '*',

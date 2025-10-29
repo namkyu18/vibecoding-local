@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { developerData } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,16 +8,55 @@ export async function GET(request: NextRequest) {
     const includeSkills = searchParams.get('includeSkills') === 'true';
     const skillCategory = searchParams.get('skillCategory');
 
-    let responseData = { ...developerData };
+    // 개발자 정보 조회
+    const { data: developer, error: developerError } = await supabase
+      .from('developer')
+      .select('*')
+      .single();
 
-    // 스킬 필터링
-    if (includeSkills && skillCategory) {
-      responseData.skills = responseData.skills.filter(
-        skill => skill.category === skillCategory
-      );
-    } else if (!includeSkills) {
-      // 스킬 정보 제외
-      delete responseData.skills;
+    if (developerError) {
+      console.error('Supabase developer error:', developerError);
+      return NextResponse.json({
+        success: false,
+        error: "데이터베이스에서 개발자 정보를 조회하는 중 오류가 발생했습니다.",
+        message: "서버 내부 오류가 발생했습니다."
+      }, {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
+    let responseData = { ...developer };
+
+    // 스킬 정보 포함 여부에 따라 처리
+    if (includeSkills) {
+      let skillsQuery = supabase.from('skills').select('*');
+      
+      if (skillCategory) {
+        skillsQuery = skillsQuery.eq('category', skillCategory);
+      }
+
+      const { data: skills, error: skillsError } = await skillsQuery;
+
+      if (skillsError) {
+        console.error('Supabase skills error:', skillsError);
+        return NextResponse.json({
+          success: false,
+          error: "데이터베이스에서 기술 스택을 조회하는 중 오류가 발생했습니다.",
+          message: "서버 내부 오류가 발생했습니다."
+        }, {
+          status: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          }
+        });
+      }
+
+      responseData.skills = skills || [];
     }
 
     return NextResponse.json({
