@@ -251,11 +251,14 @@ export default function Home() {
         fetchGuestbookEntries(); // 목록 새로고침
         alert('방명록이 성공적으로 작성되었습니다!');
       } else {
-        alert(data.message || '방명록 작성에 실패했습니다.');
+        // 더 자세한 에러 메시지 표시
+        const errorMsg = data.error || data.message || '방명록 작성에 실패했습니다.';
+        console.error('API Error:', data);
+        alert(`오류: ${errorMsg}\n\n${data.details ? `상세: ${data.details}` : ''}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('방명록 작성 실패:', error);
-      alert('방명록 작성 중 오류가 발생했습니다.');
+      alert(`방명록 작성 중 오류가 발생했습니다.\n\n${error?.message || String(error)}`);
     } finally {
       setIsSubmitting(false);
     }

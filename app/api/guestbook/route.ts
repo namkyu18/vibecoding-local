@@ -1,8 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
+    // Supabase 환경 변수 확인
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        success: false,
+        error: "Supabase 환경 변수가 설정되지 않았습니다.",
+        message: "Vercel 환경 변수에 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요."
+      }, {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
     const { data: entries, error } = await supabase
       .from('guestbook')
       .select('*')
@@ -55,6 +70,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Supabase 환경 변수 확인
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({
+        success: false,
+        error: "Supabase 환경 변수가 설정되지 않았습니다.",
+        message: "Vercel 환경 변수에 NEXT_PUBLIC_SUPABASE_URL과 NEXT_PUBLIC_SUPABASE_ANON_KEY를 설정해주세요."
+      }, {
+        status: 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        }
+      });
+    }
+
     const body = await request.json();
     const { name, message } = body;
 
@@ -126,10 +156,21 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Supabase error:', error);
+      // 더 자세한 에러 메시지 제공
+      let errorMessage = "서버 내부 오류가 발생했습니다.";
+      if (error.code === 'PGRST204' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
+        errorMessage = "데이터베이스 테이블이 생성되지 않았습니다. Supabase SQL Editor에서 schema.sql을 실행해주세요.";
+      } else if (error.code === '42501' || error.message?.includes('permission') || error.message?.includes('policy')) {
+        errorMessage = "데이터베이스 권한 문제입니다. Supabase RLS 정책을 확인해주세요.";
+      } else if (error.message) {
+        errorMessage = `데이터베이스 오류: ${error.message}`;
+      }
+      
       return NextResponse.json({
         success: false,
         error: "데이터베이스에 방명록을 저장하는 중 오류가 발생했습니다.",
-        message: "서버 내부 오류가 발생했습니다."
+        message: errorMessage,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       }, {
         status: 500,
         headers: {
@@ -152,12 +193,13 @@ export async function POST(request: NextRequest) {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Guestbook POST API Error:', error);
     return NextResponse.json({
       success: false,
       error: "방명록 작성 중 오류가 발생했습니다.",
-      message: "서버 내부 오류가 발생했습니다."
+      message: error?.message || "서버 내부 오류가 발생했습니다.",
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
     }, {
       status: 500,
       headers: {
